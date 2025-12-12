@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# Secrets (Important!)
+credentials.json
+token.json
+config.py
+
+# User Data & History
+users/
+histories/
+email_*.txt
+
+# OS
+.DS_Store
