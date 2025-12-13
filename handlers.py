@@ -102,7 +102,7 @@ async def grant_access(update: Update, context: ContextTypes.DEFAULT_TYPE):
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json',
         SCOPES,
-        redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+        redirect_uri='http://localhost'
     )
     
     auth_url, _ = flow.authorization_url(prompt='consent')
