@@ -25,19 +25,13 @@ while true; do
   fi
   
   # Start Python if not already running
-  if ! $python_running || ! pgrep -f "venv/bin/python main.py" > /dev/null; then
-    echo "Activating virtual environment..."
-    source venv/bin/activate  
-    sleep 2
-    echo "Upgrading pip..."
-    pip install --upgrade pip
-    sleep 2
-    echo "Installing requirements..."
-    pip install -r requirements.txt 
-    sleep 2
+  
+  if !$python_running; then
+    echo "Setting up Python environment..."
+    venv/bin/python -m pip install --upgrade pip
+    venv/bin/python -m pip install -r requirements.txt
     echo "Starting bot..."
-    python main.py & disown
-    PYTHON_PID=$!
+    venv/bin/python main.py & disown
     python_running=true
   fi
   
