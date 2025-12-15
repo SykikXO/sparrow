@@ -7,7 +7,11 @@ while true; do
   
   echo "Starting Bot..."
   # Use the python from the virtual environment
-  ./venv/bin/python main.py
+  source ./venv/bin/activate
+  sleep 2
+  pip install -r requirements.txt
+  sleep 2
+  python main.py  
   
   EXIT_CODE=$?
   echo "Bot stopped with exit code $EXIT_CODE."
