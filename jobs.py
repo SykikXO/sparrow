@@ -70,8 +70,9 @@ async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
                     # Telegram limit (4096 chars)
                     if len(summary) > 4000:
                         summary = summary[:4000] + "..."
-                        
-                    await context.bot.send_message(chat_id=chat_id, text=summary, parse_mode='Markdown')
+                    
+                    # Send without parse_mode to avoid Markdown errors from Ollama
+                    await context.bot.send_message(chat_id=chat_id, text=summary)
                     
                     # Mark as Read and Update History
                     mark_as_read(service, msg['id'])
@@ -80,6 +81,9 @@ async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
                     
                 except Exception as e:
                     logging.error(f"Error processing message {msg['id']} for {chat_id}: {e}")
+                    # Still add to history to prevent infinite retry loop
+                    history.append(msg['id'])
+                    new_ids = True
         
         # Save History if updated
         if new_ids:
