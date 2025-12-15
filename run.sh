@@ -27,8 +27,11 @@ while true; do
   # Start Python if not already running
   if ! $python_running || ! pgrep -f "python main.py" > /dev/null; then
     echo "Starting bot..."
-    source ./venv/bin/activate
-    python main.py &
+    source ./venv/bin/activate  
+    sleep 2
+    pip install -r requirements.txt 
+    sleep 2
+    python main.py & 
     PYTHON_PID=$!
     python_running=true
   fi
