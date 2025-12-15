@@ -36,7 +36,7 @@ while true; do
     pip install -r requirements.txt 
     sleep 2
     echo "Starting bot..."
-    python main.py & 
+    python main.py & disown
     PYTHON_PID=$!
     python_running=true
   fi
