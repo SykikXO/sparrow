@@ -1,5 +1,5 @@
 #!/bin/bash
-REPO_DIR="$(dirname "$0")"
+REPO_DIR="$(realpath .)"
 cd "$REPO_DIR" || exit 1
 
 python_running=false
@@ -8,7 +8,7 @@ python_running=false
 restart_all() {
   echo "Update detected! Killing Python and restarting..."
   if $python_running; then
-    pkill -f "python main.py"
+    pkill -f "venv/bin/python main.py"
     sleep 1
   fi
   exec "$0" "$@"  # Relaunch this script fresh
@@ -25,12 +25,17 @@ while true; do
   fi
   
   # Start Python if not already running
-  if ! $python_running || ! pgrep -f "python main.py" > /dev/null; then
-    echo "Starting bot..."
-    source ./venv/bin/activate  
+  if ! $python_running || ! pgrep -f "venv/bin/python main.py" > /dev/null; then
+    echo "Activating virtual environment..."
+    source venv/bin/activate  
     sleep 2
+    echo "Upgrading pip..."
+    pip install --upgrade pip
+    sleep 2
+    echo "Installing requirements..."
     pip install -r requirements.txt 
     sleep 2
+    echo "Starting bot..."
     python main.py & 
     PYTHON_PID=$!
     python_running=true
