@@ -8,8 +8,9 @@ python_running=false
 restart_all() {
   echo "Update detected! Killing Python and restarting..."
   if $python_running; then
-    pkill -f "venv/bin/python main.py"
+    pkill -f "venv/bin/python"
     sleep 1
+    python_running=false
   fi
   exec "$0" "$@"  # Relaunch this script fresh
 }
@@ -25,7 +26,7 @@ while true; do
   fi
   
   # Start Python if not already running
-  
+
   if !$python_running; then
     echo "Setting up Python environment..."
     venv/bin/python -m pip install --upgrade pip
