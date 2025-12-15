@@ -1,26 +1,37 @@
 #!/bin/bash
-echo "Starting Bot Wrapper..."
+REPO_DIR="$(dirname "$0")"
+cd "$REPO_DIR" || exit 1
 
+python_running=false
+
+# Function to kill Python and restart everything
+restart_all() {
+  echo "Update detected! Killing Python and restarting..."
+  if $python_running; then
+    pkill -f "python main.py"
+    sleep 1
+  fi
+  exec "$0" "$@"  # Relaunch this script fresh
+}
+
+# Main update checker loop (every 10 seconds)
 while true; do
   echo "Checking for updates..."
-  git pull
+  git fetch origin
   
-  echo "Starting Bot..."
-  # Use the python from the virtual environment
-  source ./venv/bin/activate
-  sleep 2
-  pip install -r requirements.txt
-  sleep 2
-  python main.py  
-  
-  EXIT_CODE=$?
-  echo "Bot stopped with exit code $EXIT_CODE."
-  
-  if [ $EXIT_CODE -ne 0 ]; then
-     echo "Bot crashed or stopped. Restarting in 5 seconds..."
-     sleep 5
-  else
-     echo "Bot exited normally. Restarting immediately..."
-     sleep 1
+  if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
+    git pull origin "$(git branch --show-current)"
+    restart_all
   fi
+  
+  # Start Python if not already running
+  if ! $python_running || ! pgrep -f "python main.py" > /dev/null; then
+    echo "Starting bot..."
+    source ./venv/bin/activate
+    python main.py &
+    PYTHON_PID=$!
+    python_running=true
+  fi
+  
+  sleep 10
 done
