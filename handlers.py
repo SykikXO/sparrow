@@ -198,14 +198,14 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 continue
         
         msg = (
-            f"▪ status\n"
-            f"────────────\n"
-            f"○ version   {version}\n"
-            f"○ battery   {battery}\n"
-            f"○ cpu temp  {cpu_temp}\n"
-            f"○ bot       running"
+            f"▪︎ status\n"
+            f"─────────\n"
+            f"› version  {version}\n"
+            f"› battery  {battery}\n"
+            f"› cpu      {cpu_temp}\n"
+            f"› bot      running"
         )
-        await update.message.reply_text(f"```\n{msg}\n```", parse_mode='Markdown')
+        await update.message.reply_text(msg)
         
     except Exception as e:
         await update.message.reply_text(f"Error: {e}")
