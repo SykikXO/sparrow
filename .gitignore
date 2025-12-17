@@ -20,4 +20,5 @@ email_*.txt
 
 # Runtime
 .req_hash
+.modelfile_hash
 bot.log

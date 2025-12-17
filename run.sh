@@ -16,14 +16,27 @@ while true; do
     
     # Only install deps if requirements.txt changed
     REQ_HASH=$(md5sum requirements.txt | cut -d' ' -f1)
-    CACHED_HASH=""
-    [ -f .req_hash ] && CACHED_HASH=$(cat .req_hash)
+    CACHED_REQ=""
+    [ -f .req_hash ] && CACHED_REQ=$(cat .req_hash)
     
-    if [ "$REQ_HASH" != "$CACHED_HASH" ]; then
+    if [ "$REQ_HASH" != "$CACHED_REQ" ]; then
       echo "Requirements changed. Installing dependencies..."
       venv/bin/python -m pip install --upgrade pip -q
       venv/bin/python -m pip install -r requirements.txt -q
       echo "$REQ_HASH" > .req_hash
+    fi
+    
+    # Rebuild Ollama model if Modelfile changed
+    if [ -f Modelfile ]; then
+      MODEL_HASH=$(md5sum Modelfile | cut -d' ' -f1)
+      CACHED_MODEL=""
+      [ -f .modelfile_hash ] && CACHED_MODEL=$(cat .modelfile_hash)
+      
+      if [ "$MODEL_HASH" != "$CACHED_MODEL" ]; then
+        echo "Modelfile changed. Rebuilding Ollama model..."
+        ollama create sum -f Modelfile
+        echo "$MODEL_HASH" > .modelfile_hash
+      fi
     fi
     
     echo "Starting bot..."

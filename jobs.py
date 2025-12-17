@@ -62,10 +62,9 @@ async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
                     sender = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown Sender')
                     
                     body = get_email_body(payload)
-                    clean_body = remove_links(body)
                     
-                    # Use async summarization (non-blocking)
-                    summary = await ollama_summarize(clean_body, subject, sender)
+                    # Use async summarization with full body (keep links for context)
+                    summary = await ollama_summarize(body, subject, sender)
                     
                     # Telegram limit (4096 chars)
                     if len(summary) > 4000:
