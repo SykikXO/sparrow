@@ -28,14 +28,21 @@ while true; do
     
     # Rebuild Ollama model if Modelfile changed
     if [ -f Modelfile ]; then
-      MODEL_HASH=$(md5sum Modelfile | cut -d' ' -f1)
+      MODEL_HASH=$(md5sum Modelfile | awk '{print $1}')
       CACHED_MODEL=""
       [ -f .modelfile_hash ] && CACHED_MODEL=$(cat .modelfile_hash)
       
       if [ "$MODEL_HASH" != "$CACHED_MODEL" ]; then
         echo "Modelfile changed. Rebuilding Ollama model..."
-        ollama create sum -f Modelfile
-        echo "$MODEL_HASH" > .modelfile_hash
+        echo "Current Hash: $MODEL_HASH"
+        echo "Cached Hash: $CACHED_MODEL"
+        
+        if ollama create sum -f Modelfile; then
+            echo "✅ Ollama model rebuilt successfully."
+            echo "$MODEL_HASH" > .modelfile_hash
+        else
+            echo "❌ FAILED to rebuild Ollama model. Will retry next loop."
+        fi
       fi
     fi
     
