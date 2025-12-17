@@ -3,6 +3,7 @@ ollama_integration.py
 ---------------------
 Integrates with local Ollama instance to summarize emails.
 """
+import re
 import ollama
 import logging
 import asyncio
@@ -26,6 +27,10 @@ Subject: {subject}
         ])
         
         summary = response['message']['content'].strip()
+        
+        # Strip thinking tags from qwen3 thinking model output
+        # e.g., <think>reasoning...</think>actual response
+        summary = re.sub(r'<think>.*?</think>', '', summary, flags=re.DOTALL).strip()
         
         # Add header for context
         return f"📧 {subject}\n\n{summary}"

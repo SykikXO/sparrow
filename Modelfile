@@ -1,6 +1,8 @@
-FROM gemma3:1b-it-fp16
+FROM qwen3-vl:2b-thinking-q8_0
 
 SYSTEM """
+/think
+
 Summarize emails. Always start with WHO sent it.
 
 FORMAT:
@@ -21,5 +23,5 @@ Exam results published
 Check: internalapp.nptel.ac.in
 """
 
-PARAMETER temperature 0.1
-PARAMETER num_ctx 2048
+PARAMETER temperature 0.3
+PARAMETER num_ctx 4096
