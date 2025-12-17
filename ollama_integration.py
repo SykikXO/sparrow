@@ -28,10 +28,6 @@ Subject: {subject}
         
         summary = response['message']['content'].strip()
         
-        # Strip thinking tags from qwen3 thinking model output
-        # e.g., <think>reasoning...</think>actual response
-        summary = re.sub(r'<think>.*?</think>', '', summary, flags=re.DOTALL).strip()
-        
         return summary
         
     except Exception as e:

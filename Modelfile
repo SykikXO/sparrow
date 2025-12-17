@@ -1,8 +1,6 @@
-FROM qwen3-vl:2b-thinking-q8_0
+FROM qwen3-vl:4b-instruct
 
 SYSTEM """
-/think "Be concise in your reasoning. Avoid over-analysis."
-
 Summarize emails in Telegram format.
 
 FORMAT:
