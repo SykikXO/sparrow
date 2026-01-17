@@ -353,7 +353,7 @@ async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     msg = "🔗 *Linked Accounts*\n───────────────\n"
-    for i, email in enumerate(emails, 1):
+    for i, email in enumerate(emails, 0):
         meta_path = os.path.join(user_dir, f"{email}_meta.json")
         descriptor = ""
         if os.path.exists(meta_path):
