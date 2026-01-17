@@ -52,10 +52,13 @@ async def process_user_account(context, chat_id, email):
         meta_path = os.path.join(USERS_DIR, f"{chat_id}_meta.json")
         
     start_ts = 0
+    descriptor = ""
     if os.path.exists(meta_path):
         with open(meta_path, 'r') as f:
             try:
-                start_ts = json.load(f).get("start_time", 0)
+                meta = json.load(f)
+                start_ts = meta.get("start_time", 0)
+                descriptor = meta.get("descriptor", "")
             except:
                 pass
     
@@ -81,9 +84,10 @@ async def process_user_account(context, chat_id, email):
                 subject = next((h['value'] for h in headers if h['name'] == 'Subject'), 'No Subject')
                 sender = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown Sender')
                 
-                # Append email address to subject if multi-account
+                # Append email address or descriptor to subject if multi-account
                 if email:
-                    subject = f"[{email}] {subject}"
+                    prefix = descriptor if descriptor else email
+                    subject = f"[{prefix}] {subject}"
                 
                 body = get_email_body(payload)
                 

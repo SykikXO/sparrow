@@ -34,6 +34,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "─────────────────\n"
         "/help - Show this message\n"
         "/test - Summarize random email\n"
+        "/list - Linked accounts\n"
+        "/label <idx> <tag> - Rename account\n"
         "/privacy - Toggle forward protection"
     )
     
@@ -334,3 +336,85 @@ async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     except Exception as e:
         await update.message.reply_text(f"Error: {e}")
+
+async def list_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for /list command - lists linked Gmail accounts."""
+    chat_id = update.effective_chat.id
+    user_dir = os.path.join(USERS_DIR, str(chat_id))
+    
+    if not os.path.isdir(user_dir):
+        await update.message.reply_text("No accounts linked yet.")
+        return
+
+    emails = sorted([f.replace('.json', '') for f in os.listdir(user_dir) if f.endswith('.json') and '_meta' not in f])
+    
+    if not emails:
+        await update.message.reply_text("No accounts linked yet.")
+        return
+
+    msg = "🔗 *Linked Accounts*\n───────────────\n"
+    for i, email in enumerate(emails, 1):
+        meta_path = os.path.join(user_dir, f"{email}_meta.json")
+        descriptor = ""
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, 'r') as f:
+                    meta = json.load(f)
+                    descriptor = meta.get('descriptor', '')
+            except:
+                pass
+        
+        prefix = f"{descriptor} " if descriptor else ""
+        msg += f"{i}. {prefix}`{email}`\n"
+    
+    msg += "\nTo add a descriptor: `/label <num> <emoji/text>`"
+    await update.message.reply_text(msg, parse_mode='Markdown')
+
+async def label_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for /label <num/email> <descriptor>."""
+    chat_id = update.effective_chat.id
+    user_dir = os.path.join(USERS_DIR, str(chat_id))
+    
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text("Usage: `/label <number> <descriptor>`\nExample: `/label 1 📧`", parse_mode='Markdown')
+        return
+
+    target = context.args[0]
+    descriptor = " ".join(context.args[1:])
+    
+    if not os.path.isdir(user_dir):
+        await update.message.reply_text("No accounts linked yet.")
+        return
+
+    emails = sorted([f.replace('.json', '') for f in os.listdir(user_dir) if f.endswith('.json') and '_meta' not in f])
+    
+    selected_email = None
+    if target.isdigit():
+        idx = int(target) - 1
+        if 0 <= idx < len(emails):
+            selected_email = emails[idx]
+    elif target in emails:
+        selected_email = target
+        
+    if not selected_email:
+        await update.message.reply_text("Account not found. Use `/list` to see your accounts.")
+        return
+
+    # Update metadata
+    meta_path = os.path.join(user_dir, f"{selected_email}_meta.json")
+    meta = {}
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, 'r') as f:
+                meta = json.load(f)
+        except:
+            pass
+    
+    meta['descriptor'] = descriptor
+    
+    try:
+        with open(meta_path, 'w') as f:
+            json.dump(meta, f)
+        await update.message.reply_text(f"✅ Label updated for `{selected_email}`: {descriptor}", parse_mode='Markdown')
+    except Exception as e:
+        await update.message.reply_text(f"Failed to save label: {e}")

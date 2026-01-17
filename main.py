@@ -10,7 +10,7 @@ import subprocess
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 from config import BOT_TOKEN, POLL_INTERVAL, ADMIN_CHAT_ID
-from handlers import start, grant_access, handle_message, status_command, test_command, help_command, privacy_command
+from handlers import start, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command
 from jobs import poll_emails, check_updates
 
 async def startup_notify(context):
@@ -43,6 +43,10 @@ def main():
     application.add_handler(CommandHandler("status", status_command))
     # /test - Summarize random email
     application.add_handler(CommandHandler("test", test_command))
+    # /list - List accounts
+    application.add_handler(CommandHandler("list", list_command))
+    # /label <idx> <tag>
+    application.add_handler(CommandHandler("label", label_command))
     # /code <code>, or just text for Email/Code
     application.add_handler(CommandHandler("code", handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
