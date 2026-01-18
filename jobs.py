@@ -94,6 +94,11 @@ async def process_user_account(context, chat_id, email):
                 # Use async summarization with full body (keep links for context)
                 summary = await ollama_summarize(body, subject, sender)
                 
+                # Prepend descriptor if available
+                if email:
+                    prefix = descriptor if descriptor else email
+                    summary = f"[{prefix}]\n{summary}"
+                
                 # Telegram limit (4096 chars)
                 if len(summary) > 4000:
                     summary = summary[:4000] + "..."
