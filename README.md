@@ -6,7 +6,7 @@ Sparrow is a self-hosted Gmail summarizer for Telegram. It was created to solve 
 - **Language:** Python 3.10+
 - **Telegram Bot API:** `python-telegram-bot`
 - **Email Interface:** Google Gmail API (OAuth2)
-- **Summarization:** Ollama (running `qwen2.5:3b-instruct` or similar)
+- **Summarization:** Ollama (running `qwen3:4b-instruct` or similar)
 - **Model Management:** Custom `Modelfile` for optimized Telegram formatting
 
 ## Core Logic
