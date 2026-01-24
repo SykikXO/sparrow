@@ -9,6 +9,7 @@ venv/
 credentials.json
 token.json
 config.py
+sparrow.code-workspace
 
 # User Data & History
 users/
