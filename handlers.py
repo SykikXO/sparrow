@@ -16,13 +16,10 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-from config import ADMIN_CHAT_ID, SCOPES, USERS_DIR, HISTORY_DIR
+from config import ADMIN_CHAT_ID, SCOPES, USERS_DIR, HISTORY_DIR, user_privacy
 
 # Temporary storage for OAuth flows: {chat_id: flow_object}
 pending_flows = {}
-
-# Privacy settings per user: {chat_id: bool}
-user_privacy = {}
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /help command."""
@@ -67,11 +64,31 @@ async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handler for /start command.
+    Checks if the user already has a folder in USERS_DIR.
     """
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Welcome! To start using the Gmail Bot, please reply with your email address."
-    )
+    chat_id = update.effective_chat.id
+    user_dir = os.path.join(USERS_DIR, str(chat_id))
+    
+    # Check for both directory (new style) and root level .json (legacy)
+    is_existing = os.path.isdir(user_dir) or os.path.exists(os.path.join(USERS_DIR, f"{chat_id}.json"))
+    
+    if is_existing:
+        msg = (
+            "✨ **Welcome back to Sparrow Mail!**\n\n"
+            "Your data has been successfully preserved. I've already resumed monitoring your linked "
+            "Gmail accounts. You will receive summaries here as usual.\n\n"
+            "Use `/list` to see your connected accounts or `/help` for more commands."
+        )
+        await update.message.reply_text(msg, parse_mode='Markdown')
+        
+        # Trigger immediate poll spree
+        from jobs import poll_user_now
+        context.job_queue.run_once(poll_user_now, when=0, data=chat_id)
+    else:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Welcome! To start using the Gmail Bot, please reply with your email address."
+        )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """

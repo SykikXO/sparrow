@@ -12,11 +12,10 @@ import logging
 import asyncio
 from telegram.ext import ContextTypes
 
-from config import USERS_DIR, ADMIN_CHAT_ID
+from config import USERS_DIR, ADMIN_CHAT_ID, user_privacy
 from gmail_api import get_gmail_service, list_messages, get_email_body, remove_links, mark_as_read
 from history import load_history, save_history
 from ollama_integration import ollama_summarize
-from handlers import user_privacy
 
 async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
     """
@@ -171,4 +170,25 @@ async def check_updates(context: ContextTypes.DEFAULT_TYPE):
             
     except Exception as e:
         logging.error(f"Update check failed: {e}")
+
+
+async def poll_user_now(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Triggers an immediate poll for a specific user ID.
+    Used for 'welcome back' summaries.
+    """
+    chat_id = str(context.job.data)
+    
+    # 1. Process Legacy
+    path = os.path.join(USERS_DIR, f"{chat_id}.json")
+    if os.path.isfile(path):
+        await process_user_account(context, chat_id, None)
+        
+    # 2. Process Multi-Account
+    user_dir = os.path.join(USERS_DIR, chat_id)
+    if os.path.isdir(user_dir):
+        for filename in os.listdir(user_dir):
+            if filename.endswith('.json') and '_meta' not in filename:
+                email = filename.replace('.json', '')
+                await process_user_account(context, chat_id, email)
 
