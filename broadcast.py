@@ -15,10 +15,28 @@ async def broadcast_notification():
     """Sends a notification to all users about the bot migration."""
     bot = Bot(token=BOT_TOKEN)
     
-    # Message to send
-    message = input("Enter message to broadcast: ")
+    # Message to send: Read multiline until Ctrl-D (Linux) or Ctrl-Z (Windows)
+    print("Enter/Paste your message. Press Ctrl-D (or Ctrl-Z on Windows) to send:")
+    lines = []
+    try:
+        while True:
+            line = input()
+            lines.append(line)
+    except EOFError:
+        pass
+    
+    raw_message = "\n".join(lines).strip()
+    
+    # Handle Python-style quotes and literal \n if user pasted them literally
+    if (raw_message.startswith('"') and raw_message.endswith('"')) or (raw_message.startswith("'") and raw_message.endswith("'")):
+        raw_message = raw_message[1:-1]
+    
+    # Replace literal \n with actual newlines
+    message = raw_message.replace('\\n', '\n')
 
-    if not os.path.exists(USERS_DIR):
+    if not message:
+        logging.error("Message text is empty. Broadcast cancelled.")
+        return
         logging.error(f"Users directory '{USERS_DIR}' not found.")
         return
 
