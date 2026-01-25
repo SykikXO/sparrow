@@ -41,6 +41,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "─────────────────\n"
         "/grant <id> - Authorize user\n"
         "/status - Device status"
+        "/checkupdates - Check for updates"
     )
     
     msg = user_cmds + (admin_cmds if is_admin else "")
