@@ -40,7 +40,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "\n\n*Admin Commands*\n"
         "─────────────────\n"
         "/grant <id> - Authorize user\n"
-        "/status - Device status"
+        "/status - Device status\n"
         "/checkupdates - Check for updates"
     )
     
