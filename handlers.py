@@ -256,9 +256,10 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 data = json.loads(result.stdout)
                 pct = data.get('percentage', '?')
                 status = data.get('status', '').lower()
-                icon = "⚡" if status == "charging" else "○"
+                plugged = data.get('plugged', '').lower()
+                icon = "⚡" if status == "charging" or plugged == "plugged_ac" else "○"
                 battery = f"{pct}% {icon}"
-        except:
+        except: 
             try:
                 with open('/sys/class/power_supply/battery/capacity', 'r') as f:
                     battery = f"{f.read().strip()}%"
