@@ -316,9 +316,6 @@ async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("You haven't connected any Gmail accounts yet. Send your email to get started.")
         return
     
-    # If multiple emails, user should specify or we pick first? 
-    # For /test, let's just pick the first one or the one they specify if we had that.
-    # For now, let's just pick the first linked account.
     selected_email = emails[0]
     
     service = get_gmail_service(chat_id, email=selected_email)
@@ -353,8 +350,8 @@ async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Summarize
         summary = await ollama_summarize(body, subject, sender)
         
-        if len(summary) > 4000:
-            summary = summary[:4000] + "..."
+        if len(summary) > 3000:
+            summary = summary[:3000] + "..."
             
         # Check privacy setting
         is_protected = user_privacy.get(chat_id, False)

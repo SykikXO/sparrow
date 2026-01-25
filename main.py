@@ -58,8 +58,8 @@ def main():
     # --- JOBS ---
     # Notify admin on startup (run once after 5s)
     application.job_queue.run_once(startup_notify, when=5)
-    # Poll emails every POLL_INTERVAL seconds
-    application.job_queue.run_repeating(poll_emails, interval=POLL_INTERVAL, first=100)
+    # Poll emails every POLL_INTERVAL seconds (startup poll first)
+    application.job_queue.run_repeating(poll_emails, interval=POLL_INTERVAL, first=10, name='startup_poll')
     # Check for updates every 5 minutes
     application.job_queue.run_repeating(check_updates, interval=300, first=30)
     # Prune cache every 24 hours (86400 seconds)

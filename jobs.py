@@ -31,7 +31,7 @@ async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
             path = os.path.join(USERS_DIR, filename)
             if os.path.isfile(path):
                 chat_id = filename.replace('.json', '')
-                await process_user_account(context, chat_id, None)
+                await process_user_account(context, chat_id, None, is_startup=(context.job.name == 'startup_poll'))
 
     # 2. Process Multi-Account Subdirectories
     for chat_id in os.listdir(USERS_DIR):
@@ -40,10 +40,13 @@ async def poll_emails(context: ContextTypes.DEFAULT_TYPE):
             for filename in os.listdir(user_dir):
                 if filename.endswith('.json') and '_meta' not in filename:
                     email = filename.replace('.json', '')
-                    await process_user_account(context, chat_id, email)
+                    await process_user_account(context, chat_id, email, is_startup=(context.job.name == 'startup_poll'))
 
-async def process_user_account(context, chat_id, email):
+async def process_user_account(context, chat_id, email, is_startup=False):
     """Polls a single Gmail account and sends notifications."""
+    import time
+    now = int(time.time())
+
     # Load user's start timestamp (to ignore old emails)
     if email:
         meta_path = os.path.join(USERS_DIR, str(chat_id), f"{email}_meta.json")
@@ -51,15 +54,31 @@ async def process_user_account(context, chat_id, email):
         meta_path = os.path.join(USERS_DIR, f"{chat_id}_meta.json")
         
     start_ts = 0
+    last_poll_ts = 0
     descriptor = ""
+    meta = {}
     if os.path.exists(meta_path):
         with open(meta_path, 'r') as f:
             try:
                 meta = json.load(f)
                 start_ts = meta.get("start_time", 0)
+                last_poll_ts = meta.get("last_poll_time", 0)
                 descriptor = meta.get("descriptor", "")
             except:
                 pass
+    
+    # Catch-up Logic
+    query_ts = last_poll_ts if last_poll_ts > 0 else start_ts
+    unread_only = True
+    
+    if last_poll_ts > 0:
+        downtime = now - last_poll_ts
+        if downtime > 86400:
+            # Over 24 hours, skip catch-up
+            logging.info(f"Downtime over 24h for {chat_id} ({email}). Skipping catch-up.")
+            query_ts = now - 60 # Just check last minute
+        elif is_startup or downtime > 300: # If startup or been down > 5 mins
+            unread_only = False
     
     # Get Gmail Service
     service = get_gmail_service(chat_id, email=email)
@@ -69,7 +88,7 @@ async def process_user_account(context, chat_id, email):
     history = load_history(chat_id, email=email)
     
     # Fetch Messages
-    messages = list_messages(service, after_timestamp=start_ts)
+    messages = list_messages(service, after_timestamp=query_ts, unread_only=unread_only)
     new_ids = False
     
     for msg in messages:
@@ -127,7 +146,11 @@ async def process_user_account(context, chat_id, email):
             # Yield to event loop
             await asyncio.sleep(0)
     
-    # Save History if updated
+    # Save History and Update last_poll_time
+    meta['last_poll_time'] = now
+    with open(meta_path, 'w') as f:
+        json.dump(meta, f)
+
     if new_ids:
         if len(history) > 20: # Increased a bit
             history = history[-20:]
@@ -190,7 +213,7 @@ async def poll_user_now(context: ContextTypes.DEFAULT_TYPE):
     # 1. Process Legacy
     path = os.path.join(USERS_DIR, f"{chat_id}.json")
     if os.path.isfile(path):
-        await process_user_account(context, chat_id, None)
+        await process_user_account(context, chat_id, None, is_startup=True)
         
     # 2. Process Multi-Account
     user_dir = os.path.join(USERS_DIR, chat_id)
@@ -198,5 +221,5 @@ async def poll_user_now(context: ContextTypes.DEFAULT_TYPE):
         for filename in os.listdir(user_dir):
             if filename.endswith('.json') and '_meta' not in filename:
                 email = filename.replace('.json', '')
-                await process_user_account(context, chat_id, email)
+                await process_user_account(context, chat_id, email, is_startup=True)
 

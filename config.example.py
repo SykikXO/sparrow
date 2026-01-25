@@ -17,14 +17,19 @@ ADMIN_CHAT_ID = "YOUR_ADMIN_ID_HERE"
 # --------------------------
 
 # OAuth Scopes for Gmail API
+# 'gmail.modify' to mark emails as read.
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 # Directory paths
 USERS_DIR = 'users'
 HISTORY_DIR = 'histories'
+CACHE_DB_PATH = 'cache.db'
 
 # Check for new emails every X seconds
 POLL_INTERVAL = 60
+
+# Privacy settings per user: {chat_id: bool} - Shared across modules
+user_privacy = {}
 
 # Ensure directories exist upon import
 os.makedirs(USERS_DIR, exist_ok=True)

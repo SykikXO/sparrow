@@ -127,15 +127,19 @@ def get_email_body(payload):
             
     return body or "(No readable content found)"
 
-def list_messages(service, user_id='me', after_timestamp=None, max_results=10):
+def list_messages(service, user_id='me', after_timestamp=None, max_results=10, unread_only=True):
     """
-    Lists unread messages. 
+    Lists messages. 
+    If unread_only is True, filters for unread messages.
     If after_timestamp is provided, filters for messages received after that time.
     """
     try:
-        query = 'is:unread'
+        query = 'is:unread' if unread_only else ''
         if after_timestamp:
-            query += f' after:{after_timestamp}'
+            if query:
+                query += f' after:{after_timestamp}'
+            else:
+                query = f'after:{after_timestamp}'
         results = service.users().messages().list(userId=user_id, q=query, maxResults=max_results).execute()
         return results.get('messages', [])
     except Exception as e:
