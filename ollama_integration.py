@@ -8,12 +8,23 @@ import ollama
 import logging
 import asyncio
 from functools import partial
+import cache
 
 def _sync_summarize(body, subject, sender):
     """
     Synchronous call to Ollama. Called via executor to avoid blocking.
+    Now includes caching logic.
     """
     try:
+        # 1. Generate Fingerprint
+        fingerprint = cache.generate_fingerprint(sender, subject, body)
+        
+        # 2. Check Cache
+        cached = cache.get_cached_summary(fingerprint)
+        if cached:
+            return cached
+
+        # 3. If missing, summarize with Ollama
         # Structured prompt that works better with the Modelfile's system instructions
         prompt = f"""EMAIL TO SUMMARIZE:
 
@@ -27,6 +38,9 @@ Subject: {subject}
         ])
         
         summary = response['message']['content'].strip()
+        
+        # 4. Store in Cache
+        cache.set_cached_summary(fingerprint, summary)
         
         return summary
         

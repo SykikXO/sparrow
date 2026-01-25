@@ -15,7 +15,7 @@ from googleapiclient.discovery import build
 from telegram import Update
 from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
-
+from jobs import check_updates
 from config import ADMIN_CHAT_ID, SCOPES, USERS_DIR, HISTORY_DIR, user_privacy
 
 # Temporary storage for OAuth flows: {chat_id: flow_object}
@@ -154,6 +154,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("I didn't understand that. Send your email to request access.")
 
+async def check_updates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handler for /checkupdates command.
+    Checks for updates and sends a message to the admin.
+    """
+    if str(update.effective_chat.id) != str(ADMIN_CHAT_ID):
+        return
+    
+    try:
+        await check_updates()
+    except Exception as e:
+        await update.message.reply_text(f"Error checking for updates: {e}")
 
 
 async def grant_access(update: Update, context: ContextTypes.DEFAULT_TYPE):

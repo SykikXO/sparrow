@@ -11,7 +11,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 from config import BOT_TOKEN, POLL_INTERVAL, ADMIN_CHAT_ID
 from handlers import start, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command
-from jobs import poll_emails, check_updates
+from jobs import poll_emails, check_updates, prune_cached_entries
+import cache
 
 async def startup_notify(context):
     """Notify admin on successful restart."""
@@ -28,6 +29,7 @@ async def startup_notify(context):
 
 def main():
     print("Building application...")
+    cache.init_db()
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # --- HANDLERS ---
@@ -47,6 +49,8 @@ def main():
     application.add_handler(CommandHandler("list", list_command))
     # /label <idx> <tag>
     application.add_handler(CommandHandler("label", label_command))
+    # /checkupdates - Check for updates
+    application.add_handler(CommandHandler("checkupdates", check_updates))
     # /code <code>, or just text for Email/Code
     application.add_handler(CommandHandler("code", handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
@@ -58,6 +62,8 @@ def main():
     application.job_queue.run_repeating(poll_emails, interval=POLL_INTERVAL, first=100)
     # Check for updates every 5 minutes
     application.job_queue.run_repeating(check_updates, interval=300, first=30)
+    # Prune cache every 24 hours (86400 seconds)
+    application.job_queue.run_repeating(prune_cached_entries, interval=86400, first=60)
 
     print("Bot started...")
     application.run_polling()

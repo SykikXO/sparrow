@@ -172,6 +172,14 @@ async def check_updates(context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Update check failed: {e}")
 
 
+async def prune_cached_entries(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Job that runs periodically to prune cache entries older than 1 year.
+    """
+    import cache
+    cache.prune_old_cache(days=365)
+
+
 async def poll_user_now(context: ContextTypes.DEFAULT_TYPE):
     """
     Triggers an immediate poll for a specific user ID.
