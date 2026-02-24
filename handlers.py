@@ -34,7 +34,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/test - Summarize random email\n"
         "/list - Linked accounts\n"
         "/label <idx> <tag> - Rename account\n"
-        "/privacy - Toggle forward protection"
+        "/privacy - Toggle forward protection\n"
+        "/stop - Stop the bot"
     )
     
     admin_cmds = (
