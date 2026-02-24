@@ -10,7 +10,7 @@ import subprocess
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 from config import BOT_TOKEN, POLL_INTERVAL, ADMIN_CHAT_ID
-from handlers import start, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command
+from handlers import start, stop_command, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command
 from jobs import poll_emails, check_updates, prune_cached_entries
 import cache
 
@@ -35,6 +35,8 @@ def main():
     # --- HANDLERS ---
     # /start
     application.add_handler(CommandHandler("start", start))
+    # /stop
+    application.add_handler(CommandHandler("stop", stop_command))
     # /help
     application.add_handler(CommandHandler("help", help_command))
     # /privacy

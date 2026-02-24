@@ -20,6 +20,7 @@ from config import ADMIN_CHAT_ID, SCOPES, USERS_DIR, HISTORY_DIR, user_privacy
 
 # Temporary storage for OAuth flows: {chat_id: flow_object}
 pending_flows = {}
+pending_stops = set()
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for /help command."""
@@ -62,6 +63,15 @@ async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(msg, parse_mode='Markdown')
 
+async def stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for /stop command."""
+    chat_id = update.effective_chat.id
+    pending_stops.add(chat_id)
+    await update.message.reply_text(
+        "You really want to stop the bot ?. if you will stop then all your data will be removed \n"
+        "Enter yes to stop no to remain."
+    )
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handler for /start command.
@@ -100,6 +110,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     text = update.message.text.strip()
     
+    # CASE 0: Check for pending stop confirmation
+    if chat_id in pending_stops:
+        pending_stops.remove(chat_id)
+        if text.lower() == "yes":
+            import shutil
+            user_dir = os.path.join(USERS_DIR, str(chat_id))
+            if os.path.isdir(user_dir):
+                shutil.rmtree(user_dir)
+            legacy_file = os.path.join(USERS_DIR, f"{chat_id}.json")
+            if os.path.exists(legacy_file):
+                os.remove(legacy_file)
+            await update.message.reply_text("Your account has been removed from the database.")
+        else:
+            await update.message.reply_text("Stop cancelled. Your data remains.")
+        return
+
     # CASE 1: Check for email address (Requesting Access)
     if re.match(r"[^@]+@[^@]+\.[^@]+", text):
         # Notify Admin
