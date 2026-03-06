@@ -13,11 +13,15 @@ while true; do
   # Check if bot is running
   if ! pgrep -f "venv/bin/python.*main\.py" > /dev/null; then
     echo "Bot not running. Starting..."
-    if ! venv/bin/python -m pip --version > /dev/null 2>&1; then
-      echo "pip not found in venv. Installing..."
-      venv/bin/python -m ensurepip --upgrade
+    if [ ! -d "venv" ]; then
+      echo "Creating virtual environment..."
+      python3 -m venv venv --without-pip || true
     fi
-    venv/bin/python -m pip install --upgrade pip -q
+    
+    if ! venv/bin/python -m pip --version > /dev/null 2>&1; then
+      echo "pip not found in venv. Installing via get-pip.py..."
+      curl -sS https://bootstrap.pypa.io/get-pip.py | venv/bin/python
+    fi
     venv/bin/python -m pip install -r requirements.txt -q
     ollama create sum -f Modelfile
     venv/bin/python -u main.py 2>&1 | tee -a bot.log &
