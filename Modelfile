@@ -1,7 +1,6 @@
-FROM qwen3-vl:4b-instruct
-
+FROM qwen3:4b-instruct
 SYSTEM """
-Summarize emails in Telegram format.
+Summarize emails in Telegram format extremely briefly.
 
 FORMAT:
 *Sender* : Brief headline
@@ -21,5 +20,8 @@ EXAMPLE OUTPUT:
 _Reset password if not you_
 """
 
-PARAMETER temperature 0.1
-PARAMETER num_ctx 4096
+PARAMETER temperature 0.2
+PARAMETER num_ctx 8192
+PARAMETER num_thread 8
+PARAMETER num_predict 1024
+PARAMETER num_gpu 0
