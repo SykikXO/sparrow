@@ -22,6 +22,9 @@ while true; do
       echo "Installing pip via get-pip.py..."
       curl -sS https://bootstrap.pypa.io/get-pip.py | venv/bin/python
     fi
+    # Fix Termux Rust/maturin compilation errors (e.g., cryptography)
+    export ANDROID_API_LEVEL=24
+    
     venv/bin/python -m pip install -r requirements.txt -q
     ollama create sum -f Modelfile
     venv/bin/python -u main.py 2>&1 | tee -a bot.log &
