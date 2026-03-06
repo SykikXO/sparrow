@@ -13,13 +13,13 @@ while true; do
   # Check if bot is running
   if ! pgrep -f "venv/bin/python.*main\.py" > /dev/null; then
     echo "Bot not running. Starting..."
-    if [ ! -d "venv" ]; then
-      echo "Creating virtual environment..."
+    # If venv doesn't exist or is missing pip (broken state), recreate it
+    if [ ! -f "venv/bin/pip" ] && [ ! -f "venv/bin/pip3" ]; then
+      echo "Virtual environment is broken or missing pip. Recreating..."
+      rm -rf venv
       python3 -m venv venv --without-pip || true
-    fi
-    
-    if ! venv/bin/python -m pip --version > /dev/null 2>&1; then
-      echo "pip not found in venv. Installing via get-pip.py..."
+      
+      echo "Installing pip via get-pip.py..."
       curl -sS https://bootstrap.pypa.io/get-pip.py | venv/bin/python
     fi
     venv/bin/python -m pip install -r requirements.txt -q
