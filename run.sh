@@ -13,20 +13,8 @@ while true; do
   # Check if bot is running
   if ! pgrep -f "venv/bin/python.*main\.py" > /dev/null; then
     echo "Bot not running. Starting..."
-    
-    # Only install deps if requirements.txt changed
-    REQ_HASH=$(md5sum requirements.txt | cut -d' ' -f1)
-    CACHED_REQ=""
-    [ -f .req_hash ] && CACHED_REQ=$(cat .req_hash)
-    
-    if [ "$REQ_HASH" != "$CACHED_REQ" ]; then
-      echo "Requirements changed. Installing dependencies..."
-      venv/bin/python -m pip install --upgrade pip -q
-      venv/bin/python -m pip install -r requirements.txt -q
-      echo "$REQ_HASH" > .req_hash
-    fi
-    
-    echo "Starting bot..."
+    venv/bin/python -m pip install --upgrade pip -q
+    venv/bin/python -m pip install -r requirements.txt -q
     ollama create sum -f Modelfile
     venv/bin/python -u main.py 2>&1 | tee -a bot.log &
     BOT_PID=$!
