@@ -10,7 +10,7 @@ import subprocess
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 from config import BOT_TOKEN, POLL_INTERVAL, ADMIN_CHAT_ID
-from handlers import start, stop_command, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command
+from handlers import start, stop_command, grant_access, handle_message, status_command, test_command, help_command, privacy_command, list_command, label_command, check_updates_command
 from jobs import poll_emails, check_updates, prune_cached_entries
 import cache
 
@@ -33,27 +33,16 @@ def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # --- HANDLERS ---
-    # /start
     application.add_handler(CommandHandler("start", start))
-    # /stop
     application.add_handler(CommandHandler("stop", stop_command))
-    # /help
     application.add_handler(CommandHandler("help", help_command))
-    # /privacy
     application.add_handler(CommandHandler("privacy", privacy_command))
-    # /grant <id> (Admin only)
-    application.add_handler(CommandHandler("grant", grant_access))
-    # /status - Device status (Admin only)
-    application.add_handler(CommandHandler("status", status_command))
-    # /test - Summarize random email
+    application.add_handler(CommandHandler("grant", grant_access))       # Admin only
+    application.add_handler(CommandHandler("status", status_command))     # Admin only
     application.add_handler(CommandHandler("test", test_command))
-    # /list - List accounts
     application.add_handler(CommandHandler("list", list_command))
-    # /label <idx> <tag>
     application.add_handler(CommandHandler("label", label_command))
-    # /checkupdates - Check for updates
-    application.add_handler(CommandHandler("checkupdates", check_updates))
-    # /code <code>, or just text for Email/Code
+    application.add_handler(CommandHandler("checkupdates", check_updates_command))  # Admin only
     application.add_handler(CommandHandler("code", handle_message))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
@@ -61,7 +50,7 @@ def main():
     # Notify admin on startup (run once after 5s)
     application.job_queue.run_once(startup_notify, when=5)
     # Poll emails every POLL_INTERVAL seconds (startup poll first)
-    application.job_queue.run_repeating(poll_emails, interval=POLL_INTERVAL, first=10, name='startup_poll')
+    application.job_queue.run_repeating(poll_emails, interval=POLL_INTERVAL, first=25, name='startup_poll')
     # Check for updates every 5 minutes
     application.job_queue.run_repeating(check_updates, interval=300, first=30)
     # Prune cache every 24 hours (86400 seconds)

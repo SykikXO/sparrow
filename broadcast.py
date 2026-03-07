@@ -5,12 +5,6 @@ from telegram import Bot
 from telegram.constants import ParseMode
 from config import BOT_TOKEN, USERS_DIR
 
-# Configure Logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-
 async def broadcast_notification():
     """Sends a notification to all users about the bot migration."""
     bot = Bot(token=BOT_TOKEN)
@@ -36,8 +30,6 @@ async def broadcast_notification():
 
     if not message:
         logging.error("Message text is empty. Broadcast cancelled.")
-        return
-        logging.error(f"Users directory '{USERS_DIR}' not found.")
         return
 
     # Get all chat IDs from the users directory

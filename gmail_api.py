@@ -99,9 +99,6 @@ def clean_html_css(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def remove_double_whitespace(text):
-    """Removes double whitespace from the text."""
-    return ' '.join(text.split())
 
 def get_email_body(payload):
     """

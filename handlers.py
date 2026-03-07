@@ -11,12 +11,16 @@ import os
 import re
 import json
 import time
+import subprocess
+import random
 from googleapiclient.discovery import build
 from telegram import Update
 from telegram.ext import ContextTypes
 from google_auth_oauthlib.flow import InstalledAppFlow
-from jobs import check_updates
+from jobs import check_updates as check_updates_job
 from config import ADMIN_CHAT_ID, SCOPES, USERS_DIR, HISTORY_DIR, user_privacy
+from gmail_api import get_gmail_service, get_email_body
+from ollama_integration import ollama_summarize
 
 # Temporary storage for OAuth flows: {chat_id: flow_object}
 pending_flows = {}
@@ -182,7 +186,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("I didn't understand that. Send your email to request access.")
 
-async def check_updates(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def check_updates_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Handler for /checkupdates command.
     Checks for updates and sends a message to the admin.
@@ -191,7 +195,7 @@ async def check_updates(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     try:
-        await check_updates()
+        await check_updates_job(context)
     except Exception as e:
         await update.message.reply_text(f"Error checking for updates: {e}")
 
@@ -245,10 +249,7 @@ async def grant_access(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Failed to send to user: {e}")
 
-import subprocess
-import random
-from gmail_api import get_gmail_service, get_email_body
-from ollama_integration import ollama_summarize
+
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
@@ -371,8 +372,6 @@ async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         sender = next((h['value'] for h in headers if h['name'] == 'From'), 'Unknown Sender')
         
         body = get_email_body(payload)
-        body = get_email_body(payload)
-        # Don't remove links, Ollama needs context
         
         # Summarize
         summary = await ollama_summarize(body, subject, sender)

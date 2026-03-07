@@ -11,7 +11,7 @@ RULES:
 - Use _italic_ for important action/alert
 - One line headline, one line detail
 - Skip filler words
-- Include link only if critical
+- Never include links or URLs
 - Use emojis sparingly (max 1)
 
 EXAMPLE INPUT: Zerodha login from new IP

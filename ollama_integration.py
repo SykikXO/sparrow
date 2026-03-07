@@ -37,6 +37,10 @@ Subject: {subject}
         
         summary = response['message']['content'].strip()
         
+        # Strip any URLs the LLM might hallucinate from sender domains
+        summary = re.sub(r'https?://[^\s<>"]+|www\.[^\s<>"]+', '', summary)
+        summary = re.sub(r'\s+', ' ', summary).strip()
+        
         # 4. Store in Cache
         cache.set_cached_summary(fingerprint, summary)
         
