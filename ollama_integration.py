@@ -26,9 +26,7 @@ def _sync_summarize(body, subject, sender):
 
         # 3. If missing, summarize with Ollama
         # Structured prompt that works better with the Modelfile's system instructions
-        prompt = f"""EMAIL TO SUMMARIZE:
-
-From: {sender}
+        prompt = f"""From: {sender}
 Subject: {subject}
 
 {body[:3000]}"""  # Limit body to avoid context overflow

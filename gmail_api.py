@@ -57,32 +57,46 @@ def get_user_email(service):
         logging.error(f"Error fetching user profile: {e}")
         return None
 
-def strip_html_tags(text):
+def clean_html_css(text):
     """
-    Strips HTML tags but preserves links by extracting URLs from anchor tags.
+    Removes inline CSS, <style> blocks, <script> blocks, HTML tags, 
+    and truncates long links to keep the text clean for the LLM.
     """
-    # Extract URLs from anchors first
-    links = re.findall(r'<a[^>]+href=["\']([^"\']+)["\']', text, re.IGNORECASE)
+    if not text:
+        return text
+        
+    # 1. Remove <style>...</style> and <script>...</script> completely (including contents)
+    text = re.sub(r'(?is)<style.*?>.*?</style>', ' ', text)
+    text = re.sub(r'(?is)<script.*?>.*?</script>', ' ', text)
+    text = re.sub(r'(?is)<!--.*?-->', ' ', text)
     
-    # Remove HTML tags
-    clean = re.compile('<.*?>')
-    text = re.sub(clean, ' ', text)
+    # 2. Strip all remaining HTML tags
+    text = re.sub(r'(?is)<.*?>', ' ', text)
     
-    # Append unique links at the end if they exist
-    if links:
-        # Filter out tracking/unsubscribe links
-        good_links = [l for l in links if not any(x in l.lower() for x in 
-            ['unsubscribe', 'mailto:', 'tel:', 'track', 'click', 'open.', 'list-'])]
-        unique_links = list(dict.fromkeys(good_links))[:3]  # Top 3 unique
-        if unique_links:
-            text += "\n\nLinks:\n" + "\n".join(unique_links)
+    # 3. Strip raw URLs, mailto links, and URL parameters entirely to prevent LLM bloat
+    text = re.sub(r'(?i)https?://[^\s<>"]+|www\.[^\s<>"]+|mailto:[^\s<>"]+|\?[^\s<>"]+', ' ', text)
     
-    return text
-
-def remove_links(text):
-    """Removes http/https and www links from the text."""
-    text = re.sub(r'https?://\S+', '', text)
-    text = re.sub(r'www\.\S+', '', text)
+    # Strip residual url-encoded characters like %20 that get orphaned from link removal
+    text = re.sub(r'(?:%[0-9A-Fa-f]{2})+', ' ', text)
+    
+    # Remove orphaned Markdown empty parentheses that are left behind
+    text = re.sub(r'\(\s*\)', ' ', text)
+    
+    # 4. Clean up weird CSS artifacts like "body { ... }" that didn't have tags
+    # Remove everything between { and } aggressively 
+    text = re.sub(r'(?s)\{.*?\}', ' ', text)
+    
+    # Remove CSS selectors and keywords that get orphaned when {} are removed
+    css_keywords = r'(?i)\b(@media|@import|body|img|table|span|td|th|tr|div|a|p|h[1-6]|ul|li|html|font-family|font-size|color|background|margin|padding|border|display|width|height|max-width|min-width)\b[^a-z0-9]'
+    text = re.sub(css_keywords, ' ', text)
+    text = re.sub(r'\*[\[class\].a-zA-Z0-9_\-]+', ' ', text)  # remove *[class].ib_t and similar
+    text = re.sub(r'\.[a-zA-Z0-9_\-]+', ' ', text) # remove .em_main_table and similar
+    
+    # Clean up weird html entities that might have survived
+    text = text.replace('&nbsp;', ' ').replace('&#039;', "'").replace('&#064;', '@').replace('&#183;', '·').replace('&#xa9;', '©').replace('&amp;', '&').replace('1zwnj000', '')
+    
+    # 6. Normalize whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
 def remove_double_whitespace(text):
@@ -103,14 +117,14 @@ def get_email_body(payload):
                 if data:
                     text = base64.urlsafe_b64decode(data).decode()
                     if text and text.strip().lower() != "null":
-                        return remove_double_whitespace(text)
+                        return clean_html_css(text)
         # 2. Look for text/html
         for part in payload['parts']:
             if part['mimeType'] == 'text/html':
                 data = part['body'].get('data')
                 if data:
                     html = base64.urlsafe_b64decode(data).decode()
-                    return remove_double_whitespace(strip_html_tags(html))
+                    return clean_html_css(html)
         # 3. Recurse into nested parts
         for part in payload['parts']:
             if 'parts' in part:
@@ -122,8 +136,8 @@ def get_email_body(payload):
         if data:
             content = base64.urlsafe_b64decode(data).decode()
             if payload.get('mimeType') == 'text/html':
-                return remove_double_whitespace(strip_html_tags(content))
-            return remove_double_whitespace(content)
+                return clean_html_css(content)
+            return content
             
     return body or "(No readable content found)"
 

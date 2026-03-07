@@ -15,6 +15,10 @@ sparrow.code-workspace
 users/
 histories/
 email_*.txt
+email.txt
+test_gmail.py
+token.json
+emails/
 
 # OS
 .DS_Store
