@@ -247,7 +247,7 @@ async def grant_access(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 import subprocess
 import random
-from gmail_api import get_gmail_service, get_email_body, remove_links
+from gmail_api import get_gmail_service, get_email_body
 from ollama_integration import ollama_summarize
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

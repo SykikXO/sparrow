@@ -27,3 +27,4 @@ emails/
 .req_hash
 .modelfile_hash
 bot.log
+cache.db
